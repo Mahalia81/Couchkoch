@@ -1,0 +1,1174 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#fbf6f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Couchkoch.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf6f0;--card:#fff;--ink:#1d1a17;--ink2:#4a433d;--muted:#8d847a;--line:#eee4d8;
+  --orange:#ff5a1f;--osoft:#fff0e7;--green:#18a058;--gdark:#0e7a42;--gsoft:#e5f6ec;--dark:#1e1a17;--red:#e5484d;
+  --r:22px;--shadow:0 1px 2px rgba(60,40,20,.05),0 8px 24px rgba(60,40,20,.08);
+  --top:calc(env(safe-area-inset-top,0px) + 16px);--bot:env(safe-area-inset-bottom,0px);
+  --hf:'Bricolage Grotesque',system-ui,sans-serif;--bf:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);font-family:var(--bf);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+h1,h2,h3,p{margin:0}
+.phone{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden;background:var(--bg)}
+.statusbar,.island{display:none}
+@media (min-width:600px){
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(circle at 30% 15%,#fff4e8,#f0e3d4 55%,#e4d2be)}
+  .phone{width:390px;height:844px;flex:none;border-radius:56px;box-shadow:0 0 0 11px #121212,0 0 0 13px #3a3a3a,0 50px 100px -20px rgba(60,30,10,.45);--top:56px;--bot:16px}
+  .statusbar{display:flex;position:absolute;top:0;left:0;right:0;height:52px;padding:4px 30px 0 40px;align-items:center;justify-content:space-between;z-index:70;font-weight:600;font-size:15px;pointer-events:none;transition:color .3s}
+  .statusbar .ic{display:flex;gap:6px;align-items:center}
+  .island{display:block;position:absolute;top:11px;left:50%;transform:translateX(-50%);width:122px;height:35px;border-radius:20px;background:#000;z-index:71}
+  .statusbar{background:linear-gradient(var(--bg) 75%,rgba(251,246,240,0))}
+  .phone.darkbar .statusbar{color:#fff;background:linear-gradient(#16120f 75%,rgba(22,18,15,0))}
+  .phone.herobar .statusbar{background:none}
+}
+@media (min-width:600px) and (max-height:900px){.phone{transform:scale(.9)}}
+@media (min-width:600px) and (max-height:790px){.phone{transform:scale(.8)}}
+@media (min-width:600px) and (max-height:700px){.phone{transform:scale(.7)}}
+
+/* Screens */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(26px);transition:opacity .3s ease,transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s .4s}
+.screen.active{opacity:1;visibility:visible;transform:none;transition:opacity .3s ease,transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.screen.left{transform:translateX(-26px)}
+.screen.fade{transform:none}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:var(--top) 20px 28px;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.tabbed .scroll{padding-bottom:120px}
+
+/* Basics */
+.logo{font-family:var(--hf);font-weight:800;font-size:26px;letter-spacing:-.035em}
+.logo b{color:var(--orange)}
+.logo.sm{font-size:20px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--orange)}
+.muted{color:var(--muted)}
+.h1{font-family:var(--hf);font-weight:800;font-size:34px;line-height:1.02;letter-spacing:-.03em;margin-top:6px}
+.h2{font-family:var(--hf);font-weight:700;font-size:20px;letter-spacing:-.015em}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:58px;border-radius:18px;background:var(--orange);color:#fff;font-weight:700;font-size:17px;box-shadow:0 12px 26px -10px rgba(255,90,31,.7);transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn.dark{background:var(--dark);box-shadow:none}
+.btn.ghost{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.bottombar{position:relative;z-index:5;padding:12px 20px calc(var(--bot) + 14px);background:linear-gradient(to top,var(--bg) 72%,rgba(251,246,240,0));margin-top:-26px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:99px;background:#f5eee6;font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.chip.money{background:var(--gsoft);color:var(--gdark)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.iconbtn{width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;font-size:22px;font-weight:500}
+.iconbtn:active{transform:scale(.92)}
+.topnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.stepper{display:flex;gap:6px;flex:none}
+.stepper button{width:38px;height:38px;border-radius:12px;background:#f3ece4;font-size:20px;font-weight:600}
+.stepper button:active{transform:scale(.9)}
+.prow{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px}
+.prow .pe{font-size:24px}
+.prow .pl{flex:1;display:flex;flex-direction:column}
+.prow .pl b{font-weight:700;font-size:15px}
+.prow .pl span{font-size:12.5px;color:var(--muted)}
+
+/* Range */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:99px;background:linear-gradient(to right,var(--orange) var(--p,50%),#ebe0d3 var(--p,50%));outline:none;margin:16px 0 6px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 6px rgba(255,90,31,.16);cursor:grab}
+input[type=range]::-moz-range-thumb{width:30px;height:30px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 8px rgba(0,0,0,.2),0 0 0 6px rgba(255,90,31,.16)}
+.rng{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:600}
+
+/* Intro */
+#s-intro .scroll{display:flex;flex-direction:column;padding-bottom:0}
+.collage{position:relative;height:330px;margin:14px -20px 0}
+.ph{position:absolute;width:168px;height:200px;border-radius:28px;box-shadow:0 18px 40px -12px rgba(80,40,10,.35);display:grid;place-items:center;font-size:86px;border:5px solid #fff;animation:float 5s ease-in-out infinite}
+.ph .tag{position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);background:#fff;padding:7px 13px;border-radius:99px;font-size:13px;font-weight:700;box-shadow:0 6px 16px rgba(60,40,20,.15);white-space:nowrap}
+.ph1{left:16px;top:44px;rotate:-9deg}
+.ph2{left:112px;top:104px;rotate:5deg;z-index:2;animation-delay:-1.6s}
+.ph3{right:14px;top:6px;rotate:11deg;animation-delay:-3.2s}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -8px}}
+.intro-h{font-family:var(--hf);font-weight:800;font-size:46px;letter-spacing:-.04em;line-height:.98;margin-top:30px}
+.intro-h span{color:var(--orange)}
+.intro-p{font-size:16.5px;line-height:1.45;color:var(--ink2);margin-top:12px;max-width:330px}
+.linkbtn{display:block;width:100%;text-align:center;font-weight:650;font-size:15px;color:var(--ink2);padding:14px 0 0}
+
+/* Setup */
+.q{margin-top:30px}
+.qh{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.qn{width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;flex:none}
+.stores{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.store{position:relative;aspect-ratio:1/.8;border-radius:16px;display:grid;place-items:center;font-family:var(--hf);font-weight:800;font-size:14.5px;letter-spacing:-.01em;text-transform:uppercase;box-shadow:0 2px 6px rgba(0,0,0,.09);transition:transform .15s,box-shadow .2s}
+.store:active{transform:scale(.93)}
+.store.sel{box-shadow:0 0 0 3px var(--bg),0 0 0 5.5px var(--orange)}
+.store .ck{position:absolute;top:-7px;right:-7px;width:23px;height:23px;border-radius:50%;background:var(--orange);color:#fff;font-size:12px;font-weight:800;display:grid;place-items:center;transform:scale(0);transition:transform .28s cubic-bezier(.3,1.7,.5,1);box-shadow:0 0 0 2px var(--bg)}
+.store.sel .ck{transform:scale(1)}
+.bud{padding:20px 20px 16px}
+.amount{font-family:var(--hf);font-weight:800;font-size:56px;letter-spacing:-.045em;line-height:1}
+.amount small{font-size:28px;margin-left:5px;color:var(--ink2)}
+.permeal{margin-top:10px;font-size:14px;font-weight:600;color:var(--gdark)}
+.lazy{padding:22px 16px 16px;text-align:center}
+.lazybig{font-size:70px;line-height:1;display:inline-block}
+.bounce{animation:bounce .55s cubic-bezier(.3,1.7,.5,1)}
+@keyframes bounce{0%{transform:scale(.5) translateY(12px)}60%{transform:scale(1.18) translateY(-10px)}100%{transform:none}}
+.lazyt{font-family:var(--hf);font-weight:700;font-size:20px;margin:8px 0 10px;letter-spacing:-.01em}
+.rules{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.rule{background:var(--osoft);color:#c2410c;padding:5px 11px;border-radius:99px;font-size:12.5px;font-weight:650}
+.lazyrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.lz{height:60px;border-radius:16px;background:#f6efe7;font-size:28px;display:grid;place-items:center;border:2px solid transparent;transition:.2s}
+.lz.sel{background:var(--osoft);border-color:var(--orange);transform:translateY(-3px)}
+.bonus{margin-top:34px;padding-top:24px;border-top:1.5px dashed #e3d6c7}
+.bonus-h{font-family:var(--hf);font-weight:700;font-size:18px;margin-bottom:4px}
+.subq{margin-top:20px}
+.sqh{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+.sqh b{font-weight:700}
+.sqh span{font-size:13.5px;font-weight:600}
+#perVal{color:var(--orange)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:#f1e8dd;border-radius:15px;padding:4px;gap:4px;margin-top:10px}
+.seg button{height:44px;border-radius:12px;font-weight:650;font-size:14px;color:var(--ink2);transition:.2s}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.pinrow{display:flex;gap:8px;margin-top:10px}
+.pinrow input{flex:1;min-width:0;height:50px;border-radius:15px;border:1.5px solid var(--line);background:#fff;padding:0 14px;font:inherit;font-size:16px;outline:none;color:var(--ink)}
+.pinrow input:focus{border-color:var(--orange)}
+.addb{width:50px;height:50px;border-radius:15px;background:var(--ink);color:#fff;font-size:26px;font-weight:400;flex:none}
+.pchips,.qchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pchips:empty{display:none}
+.pc{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;border-radius:99px;background:var(--gsoft);color:var(--gdark);font-weight:650;font-size:13.5px;animation:pop .3s cubic-bezier(.3,1.6,.5,1)}
+.pc.unk{background:#f3eee8;color:var(--muted);box-shadow:inset 0 0 0 1.5px #d9cdbf}
+.pc .x{width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.08);font-size:12px;display:grid;place-items:center}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.qc{padding:7px 12px;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink2)}
+.qc:active{transform:scale(.94)}
+.unknote{font-size:12.5px;color:var(--muted);margin-top:8px}
+.sugg{margin-top:14px;padding:6px;}
+.sugg-h{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 10px 6px}
+.srow{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:16px}
+.srow+.srow{border-top:1px solid var(--line)}
+.sthumb{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:24px;flex:none}
+.sinfo{flex:1;min-width:0}
+.sinfo b{display:block;font-size:14.5px;font-weight:650;line-height:1.2}
+.sinfo span{font-size:12.5px;color:var(--gdark);font-weight:600}
+.sinfo em{font-style:normal;font-size:12px;color:#c2410c;font-weight:600}
+.pinb{flex:none;padding:8px 11px;border-radius:12px;background:#f3ece4;font-size:12.5px;font-weight:700;color:var(--ink2);white-space:nowrap}
+.pinb.on{background:var(--orange);color:#fff}
+
+/* Loading */
+#s-loading .scroll{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.orbit{position:relative;width:240px;height:240px;display:grid;place-items:center;margin-bottom:34px}
+.orbit .ring{position:absolute;inset:0;animation:spin 7s linear infinite}
+.orbit .ring i{position:absolute;left:50%;top:50%;width:0;height:0}
+.orbit .ring b{position:absolute;transform:translate(-50%,-50%)}
+.orbit .ring em{display:block;font-style:normal;font-size:30px;animation:spin 7s linear infinite reverse}
+.orbit .core{width:120px;height:120px;border-radius:50%;background:#fff;box-shadow:var(--shadow);display:grid;place-items:center;animation:pulse 1.4s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.06)}}
+.lchecks{list-style:none;padding:0;margin:0;width:100%;max-width:310px}
+.lchecks li{display:flex;align-items:center;gap:12px;padding:9px 0;font-weight:600;font-size:15px;color:var(--muted);transition:color .3s}
+.lchecks li .c{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px #e3d8cb;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;flex:none;transition:.3s}
+.lchecks li.done{color:var(--ink)}
+.lchecks li.done .c{background:var(--green);box-shadow:none;animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
+
+/* Week */
+.whead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+.sumbox{background:var(--dark);color:#fff;border-radius:26px;padding:20px;box-shadow:0 20px 40px -20px rgba(30,20,10,.6)}
+.sb-l{font-size:13px;color:#b9ada0;font-weight:600}
+.sb-big{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+#sumVal{font-family:var(--hf);font-weight:800;font-size:42px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.sb-of{font-size:18px;color:#b9ada0;font-weight:600}
+.bar{height:9px;border-radius:9px;background:rgba(255,255,255,.12);margin:14px 0 10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:9px;background:var(--green);transition:width .6s cubic-bezier(.2,.8,.2,1),background .3s}
+.bar.over i{background:var(--red)}
+.sb-left{font-size:14px;font-weight:650;color:#5fd796}
+.sb-left.over{color:#ff8a8d}
+.sb-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}
+.sb-stats div{display:flex;flex-direction:column;gap:2px}
+.sb-stats div+div{padding-left:14px;border-left:1px solid rgba(255,255,255,.1)}
+.sb-stats b{font-family:var(--hf);font-weight:700;font-size:19px}
+.sb-stats span{font-size:11.5px;color:#b9ada0;font-weight:500}
+#s-week .prow{margin-top:12px}
+.dishes{display:flex;flex-direction:column;gap:12px;margin-top:18px}
+.dish{position:relative;display:flex;gap:14px;padding:12px;align-items:center;cursor:pointer;transition:transform .28s ease,opacity .28s ease}
+.dish:active{transform:scale(.985)}
+.dish.flip-out{transform:perspective(900px) rotateX(88deg);opacity:0}
+.dish.flip-in{animation:flipin .5s cubic-bezier(.2,.9,.3,1.15)}
+@keyframes flipin{from{transform:perspective(900px) rotateX(-88deg);opacity:0}to{transform:none;opacity:1}}
+.thumb{width:92px;height:92px;border-radius:18px;display:grid;place-items:center;flex:none;font-size:48px;box-shadow:inset 0 -12px 24px rgba(0,0,0,.08)}
+.dinfo{flex:1;min-width:0;padding-right:30px}
+.day{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--orange)}
+.dinfo h3{font-family:var(--hf);font-weight:700;font-size:17px;line-height:1.15;letter-spacing:-.01em;margin:3px 0 8px}
+.dinfo .chip{font-size:11.5px;padding:4px 8px}
+.ptag{margin-top:7px;font-size:12px;font-weight:650;color:var(--gdark)}
+.swap{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:#f5eee6;display:grid;place-items:center;transition:transform .5s cubic-bezier(.3,1.4,.5,1)}
+.swap svg{width:18px;height:18px;stroke:var(--ink2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.swap.spin{transform:rotate(360deg)}
+.foot{font-size:13px;color:var(--muted);text-align:center;margin-top:18px;line-height:1.45}
+
+/* Recipe */
+#s-recipe .scroll{padding-bottom:120px}
+.hero{height:300px;margin:calc(-1 * var(--top)) -20px 0;display:grid;place-items:center;font-size:140px;position:relative}
+.hero span{filter:drop-shadow(0 18px 24px rgba(0,0,0,.18));animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+.back{position:absolute;z-index:6;top:calc(var(--top) + 2px);left:16px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.8);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:grid;place-items:center;font-size:24px;box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.sheet{position:relative;background:var(--bg);border-radius:30px 30px 0 0;margin:-32px -20px 0;padding:24px 20px 0}
+.rtitle{font-family:var(--hf);font-weight:800;font-size:29px;line-height:1.05;letter-spacing:-.03em;margin:4px 0 12px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}
+.tile{padding:12px 6px;text-align:center}
+.tile b{display:block;font-family:var(--hf);font-weight:700;font-size:19px}
+.tile span{font-size:11px;color:var(--muted);font-weight:600}
+#s-recipe .prow{margin-top:12px}
+.sect{font-family:var(--hf);font-weight:700;font-size:21px;margin:26px 0 10px;letter-spacing:-.015em}
+.ings{padding:4px 16px}
+.ing{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;font-size:15px}
+.ing+.ing{border-top:1px solid var(--line)}
+.ing .amt{font-weight:650;color:var(--ink2);white-space:nowrap}
+.ing .have{font-size:11.5px;font-weight:700;color:var(--gdark);background:var(--gsoft);padding:3px 8px;border-radius:99px;margin-left:6px}
+.staples{font-size:13px;color:var(--muted);margin-top:10px;padding:0 4px}
+.steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.steps li{display:flex;gap:12px;padding:14px}
+.steps .n{width:28px;height:28px;border-radius:50%;background:var(--osoft);color:var(--orange);font-weight:800;font-size:14px;display:grid;place-items:center;flex:none}
+.steps p{font-size:15px;line-height:1.45}
+.steps small{display:block;color:var(--muted);font-size:13px;margin-top:4px;line-height:1.4}
+.fixbtn{position:absolute;left:0;right:0;bottom:0;z-index:5}
+
+/* Cook */
+#s-cook{background:#16120f;color:#fff}
+#s-cook .scroll{display:flex;flex-direction:column;padding-bottom:0}
+.ctop{display:flex;align-items:center;gap:12px}
+.cx{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);font-size:18px;flex:none}
+.segs{flex:1;display:flex;gap:5px}
+.segs i{flex:1;height:6px;border-radius:9px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
+.segs i.on::after{content:'';position:absolute;inset:0;background:var(--orange);border-radius:9px;animation:segin .45s ease both}
+@keyframes segin{from{transform:translateX(-100%)}}
+.cbody{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px 0;animation:fadeup .4s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px)}}
+.clabel{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--orange)}
+.cstep{font-family:var(--hf);font-weight:700;font-size:29px;line-height:1.15;letter-spacing:-.02em;margin:12px 0 18px}
+.ctip{background:rgba(255,255,255,.07);border-radius:18px;padding:14px 16px;color:#eadfd4;font-size:15px;line-height:1.45}
+.timer{align-self:center;margin-top:28px;position:relative;width:190px;height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:50%}
+.timer svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.timer circle{fill:none;stroke-width:10}
+.timer .bgc{stroke:rgba(255,255,255,.1)}
+.timer .fgc{stroke:var(--orange);stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.timer .tt{font-family:var(--hf);font-weight:800;font-size:46px;font-variant-numeric:tabular-nums;position:relative}
+.timer .tl{font-size:12.5px;color:#bfb3a6;position:relative;font-weight:600}
+.timer.run .fgc{stroke:#ffb020}
+.timer.done .fgc{stroke:var(--green)}
+.timer.done{animation:shake .5s infinite}
+@keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(7deg)}60%{transform:rotate(-5deg)}80%{transform:rotate(3deg)}}
+.cnav{display:flex;gap:10px;padding:12px 0 calc(var(--bot) + 16px)}
+.cnav .prev{flex:0 0 64px;background:rgba(255,255,255,.1);box-shadow:none;font-size:22px}
+.cdone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;animation:fadeup .5s ease}
+.cdone .big{font-size:96px;animation:bounce .7s cubic-bezier(.3,1.7,.5,1)}
+.cdone h2{font-family:var(--hf);font-weight:800;font-size:34px;line-height:1.05;letter-spacing:-.03em}
+.cdone p{color:#bfb3a6;font-size:15px}
+
+/* List */
+.lprog{padding:16px 18px;margin-top:16px}
+.lprog .row{display:flex;justify-content:space-between;align-items:baseline}
+.lprog b{font-family:var(--hf);font-size:24px;font-weight:800}
+.lprog span{font-size:13px;color:var(--muted);font-weight:600}
+.lprog .bar{background:#f0e7dc;margin:10px 0 0}
+.lbtns{display:flex;gap:10px;margin-top:12px}
+.lbtns .btn{height:50px;font-size:15px;border-radius:16px}
+.lbtns .wa{flex:0 0 56px;background:#25d366;box-shadow:0 10px 22px -10px rgba(37,211,102,.8)}
+.lbtns .wa svg{width:26px;height:26px;fill:#fff}
+.aisle{margin-top:22px}
+.aisle-h{display:flex;align-items:center;gap:8px;font-family:var(--hf);font-weight:700;font-size:17px;margin:0 4px 8px}
+.aisle-h small{font-family:var(--bf);font-size:12.5px;color:var(--muted);font-weight:600;margin-left:auto}
+.items{padding:2px 14px}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;cursor:pointer}
+.item+.item{border-top:1px solid var(--line)}
+.cb{width:26px;height:26px;border-radius:50%;box-shadow:inset 0 0 0 2px #dccfc1;display:grid;place-items:center;flex:none;transition:.2s;color:#fff;font-weight:800;font-size:13px}
+.item.done .cb{background:var(--green);box-shadow:none;animation:pop .3s cubic-bezier(.3,1.6,.5,1)}
+.iinfo{flex:1;min-width:0}
+.iinfo b{display:block;font-weight:600;font-size:15px;transition:.2s}
+.iinfo span{font-size:12.5px;color:var(--muted)}
+.iinfo .multi{color:#c2410c;font-weight:650}
+.item.done .iinfo b{text-decoration:line-through;color:var(--muted)}
+.iprice{font-weight:650;font-size:14.5px;font-variant-numeric:tabular-nums}
+.item.done .iprice{color:var(--muted)}
+.item.have{cursor:default}
+.item.have .cb{background:var(--gsoft);box-shadow:none;color:var(--gdark)}
+.ltotal{display:flex;justify-content:space-between;align-items:center;padding:18px;margin-top:22px;background:var(--dark);color:#fff;border-radius:20px}
+.ltotal span{font-weight:600;color:#c9bdb0}
+.ltotal b{font-family:var(--hf);font-weight:800;font-size:26px}
+.lnote{font-size:13.5px;color:var(--muted);text-align:center;margin-top:16px;line-height:1.5;padding:0 10px}
+
+/* Profile */
+.pava{width:96px;height:96px;border-radius:30px;background:var(--osoft);display:grid;place-items:center;font-size:54px;margin:8px 0 14px}
+.plist{padding:2px 16px;margin-top:18px}
+.prow2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;font-size:15px}
+.prow2+.prow2{border-top:1px solid var(--line)}
+.prow2 span{color:var(--muted)}
+.prow2 b{font-weight:650;text-align:right}
+.stat{margin-top:12px;padding:18px;display:flex;gap:14px;align-items:center}
+.stat .num{font-family:var(--hf);font-weight:800;font-size:40px;color:var(--orange);line-height:1}
+.stat p{font-size:14px;color:var(--ink2);line-height:1.4}
+.tog{width:52px;height:32px;border-radius:99px;background:#ddd2c5;position:relative;transition:.25s;flex:none}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:.25s cubic-bezier(.3,1.4,.5,1)}
+.tog.on{background:var(--green)}
+.tog.on::after{transform:translateX(20px)}
+
+/* Tabbar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 10px calc(var(--bot) + 8px);background:rgba(255,255,255,.86);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);border-top:1px solid rgba(0,0,0,.06);transform:translateY(110%);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.phone.tabs-on .tabbar{transform:none}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11px;font-weight:600;color:#9b9187;position:relative}
+.tab svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--orange)}
+.badge{position:absolute;top:1px;left:calc(50% + 6px);min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px #fff}
+.badge:empty,.badge[data-n="0"]{display:none}
+
+/* Toast + Confetti */
+.toast{position:absolute;left:16px;right:16px;bottom:calc(104px + var(--bot));z-index:90;background:var(--dark);color:#fff;padding:14px 16px;border-radius:16px;font-weight:600;font-size:14px;text-align:center;line-height:1.35;transform:translateY(20px);opacity:0;pointer-events:none;transition:.32s cubic-bezier(.2,.9,.3,1.2)}
+.toast.on{transform:none;opacity:1}
+#confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:95}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span id="clock">9:41</span>
+    <span class="ic">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.6c2.3 0 4.4.9 6 2.4l1.2-1.3A10.4 10.4 0 0 0 8 .8C5.2.8 2.7 1.9.8 3.7L2 5c1.6-1.5 3.7-2.4 6-2.4Zm0 3.6c1.3 0 2.5.5 3.4 1.3l1.3-1.3A6.6 6.6 0 0 0 8 4.4c-1.8 0-3.4.7-4.7 1.8l1.3 1.3C5.5 6.7 6.7 6.2 8 6.2Zm0 3.4c-.5 0-1 .2-1.4.5L8 11.6l1.4-1.5c-.4-.3-.9-.5-1.4-.5Z"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".5" y=".5" width="23" height="12" rx="3.5" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="18" height="9" rx="2" fill="currentColor"/><path d="M25 4.5v4c.8-.3 1.3-1.1 1.3-2s-.5-1.7-1.3-2Z" fill="currentColor" opacity=".45"/></svg>
+    </span>
+  </div>
+
+  <!-- 1 Intro -->
+  <section class="screen active" id="s-intro">
+    <div class="scroll">
+      <div class="logo">Couchkoch<b>.</b></div>
+      <div class="collage">
+        <div class="ph ph1" style="background:linear-gradient(135deg,#ffe08a,#f2994a)">🍜<span class="tag">⏱ 10 Min</span></div>
+        <div class="ph ph2" style="background:linear-gradient(135deg,#ffd36e,#ff8a3d)">🍝<span class="tag">🍳 1 Pfanne</span></div>
+        <div class="ph ph3" style="background:linear-gradient(135deg,#cfe8a9,#4f9d5d)">🥗<span class="tag">💶 2,40 €</span></div>
+      </div>
+      <h1 class="intro-h">Kochen<br>für Faule<span>.</span></h1>
+      <p class="intro-p">Sag uns, wie faul du bist. Wir sagen dir, was du diese Woche isst und was du einkaufen musst.</p>
+      <div style="flex:1"></div>
+    </div>
+    <div class="bottombar">
+      <button class="btn" data-act="start">Los geht's <span>→</span></button>
+      <button class="linkbtn" id="resumeBtn" data-act="resume" hidden>Zu meiner Woche</button>
+    </div>
+  </section>
+
+  <!-- 2 Setup -->
+  <section class="screen" id="s-setup">
+    <div class="scroll">
+      <div class="topnav">
+        <button class="iconbtn" data-act="go" data-arg="intro" aria-label="Zurück">‹</button>
+        <div class="logo sm">Couchkoch<b>.</b></div>
+        <span style="width:40px"></span>
+      </div>
+      <h1 class="h1">3 Fragen.<br>Dann wird gegessen.</h1>
+
+      <div class="q">
+        <div class="qh"><span class="qn">1</span><h2 class="h2">Wo kaufst du ein?</h2></div>
+        <div class="stores" id="stores"></div>
+      </div>
+
+      <div class="q">
+        <div class="qh"><span class="qn">2</span><h2 class="h2">Budget pro Woche</h2></div>
+        <div class="card bud">
+          <div class="amount"><span id="budVal">30</span><small>€</small></div>
+          <input type="range" id="budget" min="10" max="60" step="1" value="30" aria-label="Budget pro Woche">
+          <div class="rng"><span>10 €</span><span id="budMax">60 €</span></div>
+          <div class="permeal" id="perMeal"></div>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="qh"><span class="qn">3</span><h2 class="h2">Wie faul bist du?</h2></div>
+        <div class="card lazy" id="lazy"></div>
+      </div>
+
+      <div class="bonus">
+        <div class="bonus-h">🤫 Okay, gelogen. Noch 3 Mini-Sachen.</div>
+        <div class="muted" style="font-size:13.5px">Alles optional. Aber lohnt sich.</div>
+
+        <div class="subq">
+          <div class="sqh"><b>Für wie viele kochst du?</b><span id="perVal">1 Person</span></div>
+          <input type="range" id="persons" min="1" max="6" step="1" value="1" aria-label="Anzahl Personen">
+          <div class="rng"><span>nur ich</span><span>6 Leute</span></div>
+        </div>
+
+        <div class="subq">
+          <div class="sqh"><b>Was kommt auf den Teller?</b></div>
+          <div class="seg" id="diet"></div>
+        </div>
+
+        <div class="subq">
+          <div class="sqh"><b>Was hast du noch da?</b><span class="muted">wir planen drumherum</span></div>
+          <div class="pinrow">
+            <input id="pIn" type="text" placeholder="z. B. Nudeln, Eier, Feta" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">
+            <button class="addb" data-act="pAdd" aria-label="Hinzufügen">+</button>
+          </div>
+          <div class="pchips" id="pChips"></div>
+          <div class="qchips" id="pQuick"></div>
+          <div id="sugg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottombar"><button class="btn" data-act="plan">Meine Woche planen <span>→</span></button></div>
+  </section>
+
+  <!-- 3 Loading -->
+  <section class="screen" id="s-loading">
+    <div class="scroll">
+      <div class="orbit">
+        <div class="ring" id="ring"></div>
+        <div class="core"><div class="logo sm">Couchkoch<b>.</b></div></div>
+      </div>
+      <ul class="lchecks" id="lchecks"></ul>
+    </div>
+  </section>
+
+  <!-- 4 Woche -->
+  <section class="screen tabbed" id="s-week">
+    <div class="scroll">
+      <div class="whead">
+        <div><div class="eyebrow" id="wkSub"></div><h1 class="h1">Deine Woche.</h1></div>
+        <button class="iconbtn" data-act="reroll" aria-label="Alles neu würfeln">🎲</button>
+      </div>
+      <div class="sumbox">
+        <div class="sb-l">Wochensumme</div>
+        <div class="sb-big"><span id="sumVal" data-v="0">0,00 €</span><span class="sb-of" id="sumOf">/ 30 €</span></div>
+        <div class="bar" id="sumBarWrap"><i id="sumBar"></i></div>
+        <div class="sb-left" id="sumLeft"></div>
+        <div class="sb-stats">
+          <div><b id="stTime">–</b><span>Ø Kochzeit</span></div>
+          <div><b id="stIng">–</b><span>Zutaten</span></div>
+          <div><b id="stMeal">–</b><span>pro Essen</span></div>
+        </div>
+      </div>
+      <div class="card prow">
+        <span class="pe">👥</span>
+        <div class="pl"><b class="persLbl">1 Person</b><span>Mengen und Preise passen sich an</span></div>
+        <div class="stepper"><button data-act="pp" data-arg="-1" aria-label="Weniger Personen">−</button><button data-act="pp" data-arg="1" aria-label="Mehr Personen">+</button></div>
+      </div>
+      <div class="dishes" id="dishes"></div>
+      <p class="foot">↻ tauscht ein Gericht aus. Antippen öffnet das Rezept.</p>
+    </div>
+  </section>
+
+  <!-- 7 Einkauf -->
+  <section class="screen tabbed" id="s-list">
+    <div class="scroll" id="listScroll"></div>
+  </section>
+
+  <!-- Profil -->
+  <section class="screen tabbed" id="s-profile">
+    <div class="scroll" id="profScroll"></div>
+  </section>
+
+  <!-- 5 Rezept -->
+  <section class="screen" id="s-recipe">
+    <button class="back" data-act="go" data-arg="week" aria-label="Zurück">‹</button>
+    <div class="scroll" id="recScroll"></div>
+    <div class="bottombar fixbtn"><button class="btn" data-act="cook">Kochmodus starten <span>👩‍🍳</span></button></div>
+  </section>
+
+  <!-- 6 Kochmodus -->
+  <section class="screen" id="s-cook">
+    <div class="scroll" id="cookScroll"></div>
+  </section>
+
+  <nav class="tabbar" id="tabbar">
+    <button class="tab on" data-act="tab" data-arg="week"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Woche</button>
+    <button class="tab" data-act="tab" data-arg="list"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></svg>Einkauf<span class="badge" id="badge"></span></button>
+    <button class="tab" data-act="tab" data-arg="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20.5c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg>Profil</button>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <canvas id="confetti"></canvas>
+</div>
+
+<script>
+/* ============ DATEN ============ */
+const STORES=[
+  {id:'lidl',n:'Lidl',bg:'#0050aa',fg:'#fff000',f:1},
+  {id:'aldi',n:'Aldi',bg:'#00205b',fg:'#ffffff',f:1},
+  {id:'rewe',n:'Rewe',bg:'#cc071e',fg:'#ffffff',f:1.16},
+  {id:'edeka',n:'Edeka',bg:'#ffd400',fg:'#1b4d9b',f:1.18},
+  {id:'kaufland',n:'Kaufland',bg:'#e10915',fg:'#ffffff',f:1.04},
+  {id:'penny',n:'Penny',bg:'#cd1414',fg:'#ffffff',f:1},
+  {id:'netto',n:'Netto',bg:'#ffe500',fg:'#d6001c',f:1},
+  {id:'norma',n:'Norma',bg:'#ffffff',fg:'#e30613',f:1}
+];
+const LAZY=[
+  {e:'🫠',t:'Ich kann Wasser kochen',max:10,rules:['max. 10 Min','1 Topf','0 Schneiden']},
+  {e:'😮‍💨',t:'Nudeln krieg ich hin',max:15,rules:['max. 15 Min','1 Topf oder Pfanne']},
+  {e:'🙂',t:"Ich hab 'ne Pfanne",max:20,rules:['max. 20 Min','bisschen Schneiden']},
+  {e:'😎',t:"Ich hab sogar 'ne Knoblauchpresse",max:30,rules:['max. 30 Min','Ofen erlaubt']}
+];
+const DIETS=[{n:'Alles',e:'🍗'},{n:'Vegetarisch',e:'🥚'},{n:'Vegan',e:'🌱'}];
+const AISLES=[['obst','Obst & Gemüse','🥦'],['brot','Brot & Backwaren','🥖'],['kuehl','Kühlregal','🧀'],['fleisch','Fleisch & Fisch','🥩'],['tk','Tiefkühl','🧊'],['trocken','Nudeln, Reis & Co.','🍝']];
+const DAYS=['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'];
+const DSHORT=['Mo','Di','Mi','Do','Fr'];
+const RANK={meat:0,fish:0,veg:1,vegan:2};
+const QUICK=['Nudeln','Reis','Eier','Tomaten','Käse','Feta','Hähnchen','Tofu','Kichererbsen','Wraps','Kartoffeln','Brokkoli'];
+
+/* Zutaten-Katalog: n Name, pk Packung, s Packungsgröße, u Einheit, p Discounter-Preis, g Gang, k Suchbegriffe */
+const C={
+  spaghetti:{n:'Spaghetti',pk:'500 g',s:500,u:'g',p:0.99,g:'trocken',k:['nudel','spaghetti','pasta']},
+  penne:{n:'Penne',pk:'500 g',s:500,u:'g',p:0.99,g:'trocken',k:['nudel','penne','pasta']},
+  linguine:{n:'Linguine',pk:'500 g',s:500,u:'g',p:1.29,g:'trocken',k:['nudel','linguine','pasta']},
+  pesto:{n:'Pesto Genovese',pk:'Glas 190 g',s:190,u:'g',p:1.49,g:'trocken',k:['pesto']},
+  pestoRosso:{n:'Pesto Rosso (vegan)',pk:'Glas 190 g',s:190,u:'g',p:1.69,g:'trocken',k:['pesto']},
+  kirsch:{n:'Kirschtomaten',pk:'250 g',s:250,u:'g',p:1.29,g:'obst',k:['tomate','kirschtomate','cherry','cocktailtomate']},
+  ramen:{n:'Instant-Ramen',pk:'1 Pck.',s:1,u:'Pck.',p:0.79,g:'trocken',k:['ramen','instant','nudelsuppe','yum']},
+  eier:{n:'Eier',pk:'10er',s:10,u:'Stk',p:2.29,g:'kuehl',k:['ei','eier']},
+  fruehl:{n:'Frühlingszwiebeln',pk:'1 Bund',s:1,u:'Bund',p:0.79,g:'obst',k:['frühlingszwiebel','lauchzwiebel']},
+  tofu:{n:'Tofu natur',pk:'200 g',s:200,u:'g',p:1.49,g:'kuehl',k:['tofu']},
+  wraps:{n:'Weizen-Wraps',pk:'6er',s:6,u:'Stk',p:1.29,g:'brot',k:['wrap','tortilla','fladen']},
+  falafel:{n:'Falafel',pk:'200 g',s:200,u:'g',p:1.99,g:'kuehl',k:['falafel']},
+  tzatziki:{n:'Tzatziki',pk:'200 g',s:200,u:'g',p:1.19,g:'kuehl',k:['tzatziki','zaziki']},
+  hummus:{n:'Hummus',pk:'200 g',s:200,u:'g',p:1.29,g:'kuehl',k:['hummus','humus']},
+  salat:{n:'Pflücksalat',pk:'100 g',s:100,u:'g',p:0.99,g:'obst',k:['salat','rucola']},
+  kichererbsen:{n:'Kichererbsen (Dose)',pk:'400 g',s:400,u:'g',p:0.79,g:'trocken',k:['kichererbse']},
+  feta:{n:'Feta',pk:'200 g',s:200,u:'g',p:1.49,g:'kuehl',k:['feta','schafskäse','hirtenkäse']},
+  oliven:{n:'Schwarze Oliven',pk:'Glas 160 g',s:160,u:'g',p:0.99,g:'trocken',k:['olive']},
+  mozzarella:{n:'Mozzarella',pk:'125 g',s:125,u:'g',p:0.79,g:'kuehl',k:['mozzarella']},
+  basilikum:{n:'Basilikum',pk:'1 Topf',s:1,u:'Topf',p:1.49,g:'obst',k:['basilikum']},
+  ciabatta:{n:'Ciabatta',pk:'1 Stück',s:1,u:'Stk',p:1.19,g:'brot',k:['ciabatta','brot','baguette']},
+  avocado:{n:'Avocado',pk:'1 Stück',s:1,u:'Stk',p:0.99,g:'obst',k:['avocado']},
+  couscous:{n:'Couscous',pk:'500 g',s:500,u:'g',p:1.19,g:'trocken',k:['couscous','cous']},
+  mais:{n:'Mais (Dose)',pk:'285 g',s:285,u:'g',p:0.79,g:'trocken',k:['mais']},
+  gnocchi:{n:'Gnocchi',pk:'500 g',s:500,u:'g',p:1.29,g:'kuehl',k:['gnocchi']},
+  passata:{n:'Passierte Tomaten',pk:'500 g',s:500,u:'g',p:0.55,g:'trocken',k:['passata','passierte','tomatensauce','tomatensoße']},
+  parmesan:{n:'Hartkäse, gerieben',pk:'100 g',s:100,u:'g',p:1.49,g:'kuehl',k:['parmesan','hartkäse','grana']},
+  reis:{n:'Express-Reis',pk:'250 g',s:250,u:'g',p:1.29,g:'trocken',k:['reis','express']},
+  haehnchen:{n:'Hähnchengeschnetzeltes',pk:'400 g',s:400,u:'g',p:4.49,g:'fleisch',k:['hähnchen','haehnchen','huhn','hühnchen','chicken','geflügel']},
+  teriyaki:{n:'Teriyaki-Sauce',pk:'250 ml',s:250,u:'ml',p:1.79,g:'trocken',k:['teriyaki']},
+  soja:{n:'Sojasauce',pk:'150 ml',s:150,u:'ml',p:1.29,g:'trocken',k:['soja']},
+  wok:{n:'TK-Wok-Gemüse',pk:'750 g',s:750,u:'g',p:1.79,g:'tk',k:['wok','gemüse','gemuese','tk-gemüse']},
+  garnelen:{n:'Garnelen (TK)',pk:'250 g',s:250,u:'g',p:3.99,g:'tk',k:['garnele','shrimp','scampi','crevette']},
+  champignons:{n:'Champignons, geschnitten',pk:'250 g',s:250,u:'g',p:1.29,g:'obst',k:['champignon','pilz']},
+  knoblauch:{n:'Knoblauch',pk:'3 Knollen',s:30,u:'Zehe',p:0.99,g:'obst',k:['knoblauch','knofi']},
+  brokkoli:{n:'Brokkoli',pk:'500 g',s:500,u:'g',p:1.29,g:'obst',k:['brokkoli','broccoli']},
+  sahne:{n:'Kochsahne',pk:'200 ml',s:200,u:'ml',p:0.69,g:'kuehl',k:['sahne','kochsahne']},
+  hafer:{n:'Hafer-Cuisine',pk:'200 ml',s:200,u:'ml',p:0.99,g:'kuehl',k:['hafer','cuisine','pflanzensahne']},
+  rind:{n:'Rindergeschnetzeltes',pk:'300 g',s:300,u:'g',p:4.99,g:'fleisch',k:['rind','beef']},
+  curry:{n:'Grüne Currypaste',pk:'Glas 110 g',s:110,u:'g',p:1.49,g:'trocken',k:['currypaste','curry']},
+  kokos:{n:'Kokosmilch',pk:'400 ml',s:400,u:'ml',p:1.19,g:'trocken',k:['kokos']},
+  bohnen:{n:'Kidneybohnen (Dose)',pk:'400 g',s:400,u:'g',p:0.69,g:'trocken',k:['bohne','kidney']},
+  kaese:{n:'Reibekäse Gouda',pk:'200 g',s:200,u:'g',p:1.69,g:'kuehl',k:['käse','kaese','gouda','reibekäse']},
+  veganKaese:{n:'Veganer Reibekäse',pk:'150 g',s:150,u:'g',p:1.99,g:'kuehl',k:['veganer käse','vegankäse']},
+  kartoffeln:{n:'Kartoffeln',pk:'2 kg',s:2000,u:'g',p:1.99,g:'obst',k:['kartoffel','erdapfel','erdäpfel']},
+  aioli:{n:'Aioli',pk:'125 ml',s:125,u:'ml',p:1.29,g:'kuehl',k:['aioli']},
+  veganMayo:{n:'Vegane Mayo',pk:'250 ml',s:250,u:'ml',p:1.49,g:'trocken',k:['mayo','mayonnaise']}
+};
+
+/* Gerichte: Mengen pro Person. st = [Text, Tipp, Timer in Sek.] · v = Varianten für vegetarisch/vegan */
+const DISHES=[
+ {id:'pesto',n:'Pesto-Pasta mit Kirschtomaten',e:'🍝',bg:['#ffd36e','#ff8a3d'],t:10,dev:'1 Topf',lvl:0,diet:'veg',kcal:720,pr:22,
+  ing:[['spaghetti',125],['pesto',60],['kirsch',125]],sp:['Salz'],
+  st:[['Großen Topf mit Wasser füllen, ordentlich Salz rein, Deckel drauf, aufkochen.','Ja, ordentlich Salz. Das Wasser soll schmecken wie das Meer.'],
+      ['Spaghetti rein und ca. 9 Minuten sprudelnd kochen.','In der ersten Minute einmal umrühren. Sonst baust du einen Nudel-Ziegelstein.',540],
+      ['Eine Tasse Nudelwasser abschöpfen, dann abgießen und zurück in den Topf.','Das trübe Wasser ist Gold. Die Stärke macht die Sauce cremig.'],
+      ['Pesto, Kirschtomaten und einen Schuss Nudelwasser dazu, durchschwenken, fertig.','Tomaten im Ganzen? Absolut. Schneiden ist was für Leute mit Zeit.']],
+  v:{vegan:{n:'Pesto-Rosso-Pasta mit Kirschtomaten',kcal:690,pr:18,swap:{pesto:['pestoRosso',60]},repl:[['Pesto,','Pesto Rosso,']]}}},
+
+ {id:'ramen',n:'Instant-Ramen mit Wachsei',e:'🍜',bg:['#ffe08a','#f2994a'],t:8,dev:'1 Topf',lvl:0,diet:'veg',kcal:540,pr:20,
+  ing:[['ramen',1],['eier',1],['fruehl',0.25]],
+  st:[['Wasser im Topf aufkochen. Eier mit einem Löffel vorsichtig reinlegen.','Löffel, nicht werfen. Eier sind keine Bowlingkugeln.'],
+      ['Eier genau 6½ Minuten kochen lassen.','6:30 = Eigelb wie Karamell. 8 Minuten = Radiergummi.',390],
+      ['Eier rausfischen, kalt abschrecken. Ramen ins selbe Wasser und 3 Minuten ziehen lassen.','Gleicher Topf, null Abwasch. Du lernst schnell.',180],
+      ['Würzpulver rein, Ei halbieren, Frühlingszwiebel mit der Schere drüberschnippeln.','Schere zählt nicht als Schneiden. Haben wir offiziell geprüft.']],
+  v:{vegan:{n:'Instant-Ramen mit Tofu',kcal:520,pr:19,swap:{eier:['tofu',100]},st:[
+      ['Wasser im Topf aufkochen.','Deckel drauf geht schneller. Physik ist auf deiner Seite.'],
+      ['Ramen rein und 3 Minuten ziehen lassen.','Check kurz, ob das Würzpulver vegan ist. Steht hinten drauf.',180],
+      ['Tofu mit den Händen in Stücke zupfen und 1 Minute mitziehen lassen.','Zupfen statt schneiden. Fühlt sich an wie Therapie.',60],
+      ['Würzpulver rein, Frühlingszwiebel mit der Schere drüberschnippeln.','Schere zählt nicht als Schneiden. Haben wir offiziell geprüft.']]}}},
+
+ {id:'falafel',n:'Falafel-Wrap mit Tzatziki',e:'🌯',bg:['#efd99a','#c98b3c'],t:6,dev:'Mikrowelle',lvl:0,diet:'veg',kcal:650,pr:21,
+  ing:[['wraps',2],['falafel',100],['tzatziki',70],['salat',30]],
+  st:[['Falafel auf einen Teller und 1 Minute in die Mikrowelle.','Kalt gehen sie auch. Aber warm sind sie besser. Wie Socken.',60],
+      ['Wraps 20 Sekunden warm machen.','Kalte Wraps brechen wie dein Wille am Montag.',20],
+      ['Tzatziki draufschmieren, Salat und Falafel drauf.','Falafel leicht andrücken, dann rollen sie nicht weg.'],
+      ['Unten einklappen, seitlich aufrollen, reinbeißen.','Zerfällt? Dann ist es jetzt eine Bowl. War Absicht.']],
+  v:{vegan:{n:'Falafel-Wrap mit Hummus',kcal:670,pr:20,swap:{tzatziki:['hummus',70]},repl:[['Tzatziki','Hummus']]}}},
+
+ {id:'kicher',n:'Kichererbsen-Feta-Salat',e:'🥗',bg:['#d3ecaa','#6fbf73'],t:5,dev:'1 Schüssel',lvl:0,diet:'veg',kcal:560,pr:24,
+  ing:[['kichererbsen',200],['feta',100],['kirsch',100],['salat',25]],sp:['Öl','Salz','Pfeffer'],
+  st:[['Kichererbsen in ein Sieb kippen und kurz abspülen.','Das Dosenwasser riecht komisch. Ist normal. Weg damit.'],
+      ['Kichererbsen, Kirschtomaten und Salat in eine Schüssel.','Eine Schüssel. Eine. Du bist ein Abwasch-Genie.'],
+      ['Feta mit den Fingern drüberbröseln, Öl, Salz und Pfeffer drauf.','24 g Protein ohne Herd. Gym-Bros hassen diesen Trick.']],
+  v:{vegan:{n:'Kichererbsen-Oliven-Salat',kcal:480,pr:15,swap:{feta:['oliven',60]},repl:[['Feta mit den Fingern drüberbröseln','Oliven drüberkippen'],['24 g Protein ohne Herd. Gym-Bros hassen diesen Trick.','Kein Herd, kein Tier, kein Stress. Dreifacher Sieg.']]}}},
+
+ {id:'caprese',n:'Caprese mit Ciabatta',e:'🍅',bg:['#ffc0b3','#e5484d'],t:5,dev:'0 Herd',lvl:0,diet:'veg',kcal:640,pr:28,
+  ing:[['mozzarella',125],['kirsch',150],['basilikum',0.25],['ciabatta',0.5]],sp:['Öl','Salz','Pfeffer'],
+  st:[['Mozzarella abtropfen lassen und mit den Händen in Stücke zupfen.','Gezupft sieht sogar edler aus als geschnitten. Restaurant-Move.'],
+      ['Kirschtomaten dazu, Basilikumblätter drüberzupfen.','Stell den Basilikum ans Fenster. Dann lebt er vielleicht bis Freitag.'],
+      ['Öl, Salz und Pfeffer drüber. Ciabatta in Stücke reißen und eintunken.','Brot reißen statt schneiden. Wir sind hier nicht beim Bäcker-Abitur.']],
+  v:{vegan:{n:'Tomate-Avocado mit Ciabatta',e:'🥑',kcal:620,pr:9,swap:{mozzarella:['avocado',1]},repl:[['Mozzarella abtropfen lassen und mit den Händen in Stücke zupfen.','Avocado halbieren, Kern raus, mit dem Löffel in Stücken rauslöffeln.'],['Gezupft sieht sogar edler aus als geschnitten. Restaurant-Move.','Halbieren ist das einzige Schneiden heute. Versprochen.']]}}},
+
+ {id:'couscous',n:'Couscous-Bowl mit Feta',e:'🥙',bg:['#ffeaa8','#e0b252'],t:10,dev:'Wasserkocher',lvl:0,diet:'veg',kcal:610,pr:22,
+  ing:[['couscous',80],['feta',75],['kirsch',100],['mais',70]],sp:['Salz','Öl'],
+  st:[['Couscous in eine Schüssel, Prise Salz, mit gleich viel kochendem Wasser übergießen.','Couscous kocht man nicht. Man gießt Wasser drauf und wartet. Genau dein Level.'],
+      ['Teller drauf und 5 Minuten quellen lassen.','Nicht spicken. Okay, einmal.',300],
+      ['Mit der Gabel auflockern, Mais und Kirschtomaten unterheben.','Gabel, nicht Löffel. Sonst wird’s Couscous-Brei.'],
+      ['Feta drüberbröseln, Schuss Öl drauf, fertig.','Morgen kalt essen geht auch. Meal Prep, Baby.']],
+  v:{vegan:{n:'Couscous-Bowl mit Hummus',kcal:600,pr:17,swap:{feta:['hummus',70]},repl:[['Feta drüberbröseln','Hummus draufklecksen']]}}},
+
+ {id:'gnocchi',n:'Gnocchi in Tomatensauce',e:'🥔',bg:['#ffd2a3','#e8743b'],t:8,dev:'1 Topf',lvl:0,diet:'veg',kcal:620,pr:15,
+  ing:[['gnocchi',250],['passata',150],['parmesan',15]],sp:['Salz','Pfeffer'],
+  st:[['Wasser mit Salz im Topf aufkochen, Gnocchi rein.','Gnocchi sind fertig, wenn sie oben schwimmen. Sie sagen dir Bescheid.'],
+      ['Kochen, bis alle oben schwimmen. Etwa 2 Minuten.','Keine Sorge, die gehen nicht unter. Das sind Profis.',120],
+      ['Wasser abgießen, passierte Tomaten in den Topf, 3 Minuten mitköcheln.','Salzen nicht vergessen. Sonst schmeckt’s nach Krankenhaus.',180],
+      ['Hartkäse drüber, direkt aus dem Topf essen.','Teller sind optional. Wir urteilen nicht.']],
+  v:{vegan:{kcal:580,pr:11,swap:{parmesan:null},repl:[['Hartkäse drüber, direkt aus dem Topf essen.','Ordentlich Pfeffer drüber, direkt aus dem Topf essen.']]}}},
+
+ {id:'teriyaki',n:'Teriyaki-Hähnchen mit Reis',e:'🍗',bg:['#f6c177','#b5582a'],t:15,dev:'1 Pfanne',lvl:1,diet:'meat',kcal:680,pr:42,
+  ing:[['haehnchen',150],['teriyaki',50],['reis',125],['fruehl',0.25]],sp:['Öl'],
+  st:[['Öl in die Pfanne, Hähnchen rein und 6 Minuten rundum anbraten.','Nicht ständig rumschieben. Braun wird’s nur, wenn du es in Ruhe lässt. Wie Katzen.',360],
+      ['Express-Reis-Beutel anreißen und 2 Minuten in die Mikrowelle.','Express-Reis ist kein Schummeln. Okay, ein bisschen.',120],
+      ['Teriyaki-Sauce in die Pfanne und 2 Minuten einköcheln, bis alles glänzt.','Glänzt = fertig. Klebt = sehr fertig. Raucht = Fenster auf.',120],
+      ['Alles auf den Reis, Frühlingszwiebel drüberschnippeln.','Sesam drüber, falls da. Dann sieht’s aus wie auf Insta.']],
+  v:{veg:{r:2,n:'Teriyaki-Tofu mit Reis',e:'🍱',kcal:590,pr:24,swap:{haehnchen:['tofu',150]},repl:[['Hähnchen rein','Tofu in Stücke zupfen, rein']]}}},
+
+ {id:'friedrice',n:'Gebratener Reis mit Gemüse & Ei',e:'🍳',bg:['#ffe27a','#e3a23b'],t:12,dev:'1 Pfanne',lvl:1,diet:'veg',kcal:590,pr:18,
+  ing:[['reis',125],['wok',150],['eier',2],['soja',20]],sp:['Öl'],
+  st:[['Öl in die Pfanne, TK-Gemüse direkt aus der Tüte rein, 5 Minuten braten.','Nicht auftauen. Das Gemüse ist tiefgefroren, nicht du.',300],
+      ['Express-Reis dazu, zerbröseln, 3 Minuten mitbraten.','Reis darf ruhig ansetzen. Das ist kein Fehler, das ist Aroma.',180],
+      ['Platz in der Mitte machen, Eier reinschlagen und verrühren, bis sie stocken.','Schale in der Pfanne? Mit einer größeren Schalenhälfte rausfischen. Profi-Trick.'],
+      ['Sojasauce drüber, alles durchmischen.','Schmeckt am nächsten Tag noch besser. Wenn was übrig bleibt. Bleibt nie was übrig.']],
+  v:{vegan:{n:'Gebratener Reis mit Gemüse & Tofu',kcal:570,pr:19,swap:{eier:['tofu',100]},repl:[['Platz in der Mitte machen, Eier reinschlagen und verrühren, bis sie stocken.','Tofu reinbröseln und 2 Minuten mitbraten, bis er goldig wird.'],['Schale in der Pfanne? Mit einer größeren Schalenhälfte rausfischen. Profi-Trick.','Zerbröselter Tofu = Rührei für Pflanzen. Psst, merkt keiner.']]}}},
+
+ {id:'garnelen',n:'Knoblauch-Garnelen-Linguine',e:'🍤',bg:['#ffc8a8','#f06a4a'],t:15,dev:'1 Topf',lvl:1,diet:'fish',kcal:650,pr:33,
+  ing:[['linguine',125],['garnelen',125],['knoblauch',2],['kirsch',80]],sp:['Salz','Öl','Chili (optional)'],
+  st:[['Linguine in reichlich Salzwasser 10 Minuten kochen.','Ja, ordentlich Salz. Das Wasser soll schmecken wie das Meer.',600],
+      ['Garnelen in einer Schüssel mit warmem Wasser auftauen lassen.','Läuft parallel. Multitasking, du Tier.'],
+      ['Nudeln abgießen. Im Topf Öl erhitzen, Knoblauch reinquetschen, Garnelen 3 Minuten braten.','Knoblauch mit dem Messerrücken platt drücken. Die Presse brauchst du erst auf Stufe 4.',180],
+      ['Nudeln und Kirschtomaten zurück in den Topf, schwenken, fertig.','Rosa = fertig. Grau = noch nicht. Gummi = zu lange.']],
+  v:{veg:{r:2,n:'Knoblauch-Champignon-Linguine',e:'🍄',kcal:560,pr:18,swap:{garnelen:['champignons',150]},repl:[['Garnelen in einer Schüssel mit warmem Wasser auftauen lassen.','Champignons bereitstellen. Die sind schon geschnitten, du Glückspilz.'],['Garnelen 3 Minuten braten','Champignons 3 Minuten scharf anbraten'],['Rosa = fertig. Grau = noch nicht. Gummi = zu lange.','Pilze erst salzen, wenn sie braun sind. Sonst werden sie matschig.']]}}},
+
+ {id:'penne',n:'Cremige Hähnchen-Brokkoli-Penne',e:'🥦',bg:['#d9efb8','#7ab55c'],t:20,dev:'Topf + Pfanne',lvl:2,diet:'meat',kcal:780,pr:45,
+  ing:[['penne',125],['haehnchen',125],['brokkoli',150],['sahne',100],['parmesan',20]],sp:['Salz','Öl'],
+  st:[['Penne in Salzwasser 11 Minuten kochen. Brokkoli in Röschen zupfen und nach 7 Minuten mit rein.','Brokkoli im Nudelwasser: ein Topf, zwei Probleme gelöst.',660],
+      ['Parallel Öl in die Pfanne, Hähnchen 6 Minuten anbraten.','Ab und zu wenden. Nicht jede Sekunde. Du bist kein DJ.',360],
+      ['Kochsahne und Hartkäse zum Hähnchen, 2 Minuten köcheln.','Zu dick? Schluck Nudelwasser. Zu dünn? Noch Käse. Käse löst alles.',120],
+      ['Nudeln und Brokkoli abgießen, in die Pfanne, durchschwenken.','Cremig, grün, Protein. Deine Mutter würde weinen vor Glück.']],
+  v:{veg:{n:'Cremige Pilz-Brokkoli-Penne',e:'🍄',kcal:690,pr:24,swap:{haehnchen:['champignons',125]},repl:[['Hähnchen 6 Minuten','Champignons 6 Minuten'],['zum Hähnchen','zu den Pilzen']]},
+     vegan:{n:'Vegane Pilz-Brokkoli-Penne',kcal:640,pr:19,swap:{sahne:['hafer',100],parmesan:null},repl:[['Kochsahne und Hartkäse','Hafer-Cuisine'],['Noch Käse. Käse löst alles.','Länger köcheln. Geduld löst alles.']]}}},
+
+ {id:'rind',n:'Rindfleisch-Brokkoli-Pfanne',e:'🥩',bg:['#ecbf98','#8c4a2f'],t:20,dev:'1 Pfanne',lvl:2,diet:'meat',kcal:640,pr:40,
+  ing:[['rind',150],['brokkoli',200],['reis',125],['soja',30],['knoblauch',1]],sp:['Öl','Zucker (1 TL)'],
+  st:[['Brokkoli in kleine Röschen schneiden, Knoblauch fein hacken.','Das ist das versprochene bisschen Schneiden. Du schaffst das.'],
+      ['Pfanne richtig heiß, Öl rein, Rindfleisch 2 Minuten scharf anbraten, rausnehmen.','Richtig heiß heißt: Es zischt. Kein Zischen, kein Geschmack.',120],
+      ['Brokkoli und Knoblauch mit einem Schuss Wasser 5 Minuten braten. Reis in die Mikrowelle.','Wasser rein = Brokkoli dämpft. Clever, oder? War ja auch unsere Idee.',300],
+      ['Fleisch zurück, Sojasauce und Zucker dazu, 1 Minute schwenken, auf den Reis.','Takeaway-Niveau zum halben Preis. Der Lieferdienst weint leise.',60]],
+  v:{veg:{r:2,n:'Tofu-Brokkoli-Pfanne',e:'🥦',kcal:560,pr:26,swap:{rind:['tofu',150]},repl:[['Rindfleisch 2 Minuten','Tofu-Würfel 2 Minuten'],['Fleisch zurück','Tofu zurück']]}}},
+
+ {id:'curry',n:'Grünes Thai-Curry',e:'🍛',bg:['#d4ebae','#4f9d5d'],t:20,dev:'1 Topf',lvl:2,diet:'meat',kcal:720,pr:36,
+  ing:[['haehnchen',125],['curry',25],['kokos',200],['wok',150],['reis',125]],sp:['Öl'],
+  st:[['Öl in den Topf, Currypaste 1 Minute anrösten.','Der Duft ist Absicht. Die Nachbarn werden neidisch.',60],
+      ['Hähnchen rein und 4 Minuten mitbraten.','Kurz rühren, dann in Ruhe lassen. Gilt für Hähnchen und für dich.',240],
+      ['Kokosmilch und TK-Gemüse dazu, 8 Minuten köcheln. Reis in die Mikrowelle.','Zu scharf? Mehr Kokosmilch. Zu lasch? Mehr Paste. Du bist jetzt Thai-Koch.',480],
+      ['Curry über den Reis, fertig.','Limette drüber, falls da. Wenn nicht: auch gut, wir sind ja faul.']],
+  v:{veg:{r:2,n:'Grünes Thai-Curry mit Kichererbsen',kcal:680,pr:21,swap:{haehnchen:['kichererbsen',150]},repl:[['Hähnchen rein und 4 Minuten mitbraten.','Kichererbsen abspülen, rein und 4 Minuten mitbraten.'],['Kurz rühren, dann in Ruhe lassen. Gilt für Hähnchen und für dich.','Kichererbsen + Kokos = Protein mit Urlaubsgefühl. Achte auf vegane Currypaste.']]}}},
+
+ {id:'enchiladas',n:'Überbackene Enchiladas',e:'🌮',bg:['#ffd18a','#d2542d'],t:30,dev:'Ofen',lvl:3,diet:'meat',kcal:820,pr:38,
+  ing:[['wraps',2],['haehnchen',100],['bohnen',150],['mais',70],['passata',150],['kaese',60]],sp:['Salz','Paprikapulver','Öl'],
+  st:[['Ofen auf 200 °C vorheizen. Hähnchen in der Pfanne 5 Minuten anbraten.','Vorheizen ist nicht optional. Der Ofen braucht auch seinen Kaffee.',300],
+      ['Bohnen abspülen, mit Mais, Hähnchen, der Hälfte der Tomaten und Paprikapulver mischen.','Ruhig matschig. Enchiladas sind kein Schönheitswettbewerb.'],
+      ['Füllung in die Wraps, aufrollen, ab in eine Auflaufform. Rest Tomaten und Käse drüber.','Zu viel Käse gibt es nicht. Wissenschaftlich nicht belegt, aber wir glauben dran.'],
+      ['15 Minuten backen, bis der Käse blubbert.','Blubbern = fertig. Bräunlich blubbern = perfekt.',900]],
+  v:{veg:{n:'Bohnen-Enchiladas',kcal:720,pr:28,swap:{haehnchen:null},repl:[['Ofen auf 200 °C vorheizen. Hähnchen in der Pfanne 5 Minuten anbraten.','Ofen auf 200 °C vorheizen. In 5 Minuten ist er bereit.'],['mit Mais, Hähnchen,','mit Mais,']]},
+     vegan:{n:'Vegane Bohnen-Enchiladas',kcal:700,pr:22,swap:{kaese:['veganKaese',60]},repl:[['Rest Tomaten und Käse','Rest Tomaten und veganen Käse'],['Zu viel Käse gibt es nicht. Wissenschaftlich nicht belegt, aber wir glauben dran.','Veganer Käse schmilzt langsamer. Er ist halt entspannt.']]}}},
+
+ {id:'bravas',n:'Patatas Bravas aus dem Ofen',e:'🍟',bg:['#ffdc8f','#e07a2e'],t:30,dev:'Ofen',lvl:3,diet:'veg',kcal:610,pr:12,
+  ing:[['kartoffeln',350],['passata',100],['aioli',50]],sp:['Öl','Salz','Paprikapulver','Chili (optional)'],
+  st:[['Ofen auf 220 °C. Kartoffeln waschen und mit Schale in Würfel schneiden.','Schälen? Nö. Schale ist Ballaststoff und Faulheit in einem.'],
+      ['Mit Öl, Salz und Paprikapulver aufs Blech, 25 Minuten backen.','Nicht stapeln! Kartoffeln brauchen Abstand. Wie du am Montagmorgen.',1500],
+      ['Passierte Tomaten mit Paprikapulver und Chili 3 Minuten erhitzen.','Mikrowelle geht auch. Wir sagen’s keinem.',180],
+      ['Kartoffeln mit Tomatensauce und Aioli toppen.','Mit den Fingern essen ist in Spanien Kultur. Hier jetzt auch.']],
+  v:{vegan:{n:'Patatas Bravas mit veganer Mayo',kcal:590,pr:9,swap:{aioli:['veganMayo',50]},repl:[['und Aioli','und veganer Mayo']]}}}
+];
+
+/* ============ STATE ============ */
+const S={store:'lidl',budget:30,lazy:0,persons:1,diet:0,pantry:[],pinned:[],plan:[],checked:{},sound:true,cooked:0};
+function load(){try{const o=JSON.parse((localStorage.getItem('couchkoch.v1')||localStorage.getItem('kochfaul.v1'))||'null');if(o&&typeof o==='object')Object.assign(S,o);}catch(e){}}
+function save(){try{localStorage.setItem('couchkoch.v1',JSON.stringify(S));}catch(e){}}
+
+/* ============ HELFER ============ */
+const $=s=>document.querySelector(s);
+const eur=v=>v.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+const r2=v=>Math.round(v*100)/100;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store=()=>STORES.find(s=>s.id===S.store)||STORES[0];
+const F=()=>store().f;
+const unitPrice=id=>r2(C[id].p*F());
+const pers=n=>n+' '+(n>1?'Personen':'Person');
+const byId={};DISHES.forEach(d=>byId[d.id]=d);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7);}
+function devIcon(d){return d.includes('Ofen')?'🔥':d.includes('Pfanne')?'🍳':d.includes('Topf')?'🍲':d.includes('Mikro')?'⚡':d.includes('Wasser')?'☕':'🥣';}
+function devCount(d){return d.includes('+')?2:d.startsWith('0')?0:1;}
+function grad(d){return `linear-gradient(135deg,${d.bg[0]},${d.bg[1]})`;}
+function fmtAmt(a,u){
+  if(u==='g'||u==='ml'){
+    if(a>=1000)return (a/1000).toLocaleString('de-DE',{maximumFractionDigits:2})+(u==='g'?' kg':' l');
+    const r=a<50?(Math.round(a/5)*5||5):Math.round(a/10)*10;return r+' '+u;
+  }
+  const q=Math.max(.25,Math.round(a*4)/4),w=Math.floor(q),fr={0:'',0.25:'¼',0.5:'½',0.75:'¾'}[q-w];
+  const unit={Stk:'Stück',Zehe:q>1?'Zehen':'Zehe'}[u]||u;
+  return (w?w:'')+fr+' '+unit;
+}
+
+/* Diät-Varianten auflösen */
+const cache={};
+function resolve(d,need){
+  const key=d.id+'|'+need;if(cache[key])return cache[key];
+  let x={...d,ing:d.ing.map(i=>[...i]),st:d.st.map(s=>[...s]),sp:d.sp||[]};
+  let rank=RANK[d.diet];
+  [['veg',1],['vegan',2]].forEach(([k,l])=>{
+    const v=d.v&&d.v[k];
+    if(need>=l&&rank<l&&v){
+      ['n','e','kcal','pr'].forEach(p=>{if(v[p]!=null)x[p]=v[p];});
+      if(v.swap)x.ing=x.ing.flatMap(([id,a])=>id in v.swap?(v.swap[id]?[[...v.swap[id]]]:[]):[[id,a]]);
+      if(v.st)x.st=v.st.map(s=>[...s]);
+      if(v.repl)x.st=x.st.map(([t,tip,tm])=>{v.repl.forEach(([a,b])=>{t=t.split(a).join(b);tip=tip.split(a).join(b);});return [t,tip,tm];});
+      rank=v.r!=null?v.r:l;
+    }
+  });
+  if(rank<need)return null;
+  x.rank=rank;
+  return cache[key]=x;
+}
+const R=id=>resolve(byId[id],S.diet);
+const avail=()=>DISHES.map(d=>resolve(d,S.diet)).filter(Boolean);
+
+/* Vorrat */
+function match(tok,kw){return tok===kw||(kw.length>=3&&tok.startsWith(kw))||(tok.length>=4&&kw.startsWith(tok)&&kw.length-tok.length<=2);}
+const known=tok=>Object.values(C).some(c=>c.k.some(kw=>match(tok.toLowerCase(),kw)));
+function pantryHit(id){return S.pantry.some(t=>C[id].k.some(kw=>match(t.toLowerCase(),kw)));}
+const hits=d=>d.ing.filter(([id])=>pantryHit(id)).map(([id])=>id);
+
+/* Kosten */
+function share(d){return d.ing.reduce((s,[id,a])=>pantryHit(id)?s:s+a*S.persons/C[id].s*unitPrice(id),0);}
+function buildList(ds){
+  const map={};
+  ds.forEach((d,di)=>d.ing.forEach(([id,a])=>{const m=map[id]||(map[id]={id,need:0,dishes:[]});m.need+=a*S.persons;if(!m.dishes.includes(di))m.dishes.push(di);}));
+  const items=[],have=[];
+  Object.values(map).forEach(m=>{
+    const c=C[m.id];m.n=c.n;m.g=c.g;m.packs=Math.max(1,Math.ceil(m.need/c.s-1e-6));m.price=r2(m.packs*unitPrice(m.id));
+    (pantryHit(m.id)?have:items).push(m);
+  });
+  const order=AISLES.map(a=>a[0]);
+  items.sort((a,b)=>order.indexOf(a.g)-order.indexOf(b.g)||a.n.localeCompare(b.n,'de'));
+  return {items,have,total:r2(items.reduce((s,m)=>s+m.price,0))};
+}
+const planList=()=>buildList(S.plan.map(R));
+
+/* ============ PLAN-LOGIK ============ */
+function makePlan(){
+  const all=avail();
+  let pool=all.filter(d=>d.lvl<=S.lazy);
+  const pins=S.pinned.filter(id=>all.some(d=>d.id===id)).slice(0,5);
+  const score=d=>(d.lvl===S.lazy?3:0)+hits(d).length*2.5+Math.random()*2.2;
+  let rest=pool.filter(d=>!pins.includes(d.id)).map(d=>({id:d.id,s:score(d)})).sort((a,b)=>b.s-a.s).map(x=>x.id);
+  if(pins.length+rest.length<5){
+    rest=rest.concat(all.filter(d=>!pins.includes(d.id)&&!rest.includes(d.id)).sort((a,b)=>a.lvl-b.lvl).map(d=>d.id));
+    pool=all;
+  }
+  let plan=[...pins,...rest].slice(0,5);
+  // Budget: teuerstes gegen günstigstes freies tauschen, bis es passt
+  for(let i=0;i<30;i++){
+    if(buildList(plan.map(R)).total<=S.budget)break;
+    const exp=plan.filter(id=>!pins.includes(id)).map(id=>({id,c:share(R(id))})).sort((a,b)=>b.c-a.c)[0];
+    const cheap=pool.filter(d=>!plan.includes(d.id)).map(d=>({id:d.id,c:share(d)})).sort((a,b)=>a.c-b.c)[0];
+    if(!exp||!cheap||cheap.c>=exp.c)break;
+    plan[plan.indexOf(exp.id)]=cheap.id;
+  }
+  S.plan=shuffle(plan);
+  save();
+}
+
+/* ============ SOUND ============ */
+let AC;
+function ac(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC;}
+function tone(f,dur,type='sine',vol=.12,delay=0){
+  if(!S.sound)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),g=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.05);
+}
+const sfx={
+  tick:()=>tone(1500,.035,'square',.025),
+  pop:()=>{tone(620,.09,'sine',.12);tone(930,.1,'sine',.08,.05);},
+  check:()=>{tone(880,.08,'sine',.1);tone(1320,.14,'sine',.08,.06);},
+  swoosh:()=>{tone(300,.15,'triangle',.06);tone(520,.15,'triangle',.05,.07);},
+  bell:()=>{[1047,1319,1568].forEach((f,i)=>{tone(f,1.3,'sine',.11,i*.16);tone(f*2.01,.6,'sine',.025,i*.16);});}
+};
+
+/* ============ NAVIGATION ============ */
+let cur='intro';
+const TABS=['week','list','profile'];
+function go(id,mode){
+  if(id===cur)return;
+  const a=$('#s-'+cur),b=$('#s-'+id);
+  if(!mode)mode=TABS.includes(id)&&TABS.includes(cur)?'fade':'fwd';
+  [a,b].forEach(s=>s.classList.toggle('fade',mode==='fade'));
+  b.classList.remove('left');
+  if(mode==='back')b.classList.add('left');
+  void b.offsetWidth;
+  b.classList.remove('left');b.classList.add('active');
+  a.classList.remove('active');
+  if(mode==='fwd')a.classList.add('left');else a.classList.remove('left');
+  if(mode!=='back'&&b.querySelector('.scroll'))b.querySelector('.scroll').scrollTop=0;
+  cur=id;
+  $('#phone').classList.toggle('tabs-on',TABS.includes(id));
+  $('#phone').classList.toggle('darkbar',id==='cook');
+  $('#phone').classList.toggle('herobar',id==='recipe');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.arg===id));
+}
+
+/* ============ TOAST + KONFETTI ============ */
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2600);}
+function confetti(){
+  const cv=$('#confetti'),ph=$('#phone'),dpr=window.devicePixelRatio||1;
+  const W=ph.clientWidth,H=ph.clientHeight;cv.width=W*dpr;cv.height=H*dpr;
+  const ctx=cv.getContext('2d');ctx.scale(dpr,dpr);
+  const cols=['#ff5a1f','#18a058','#ffc93c','#ff7eb6','#4f8cff','#1d1a17'];
+  const P=Array.from({length:150},()=>({x:W/2+(Math.random()-.5)*60,y:H*.38,vx:(Math.random()-.5)*13,vy:-Math.random()*14-4,w:6+Math.random()*6,h:8+Math.random()*8,r:Math.random()*6,vr:(Math.random()-.5)*.35,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  (function fr(t){
+    const el=t-t0;ctx.clearRect(0,0,W,H);
+    P.forEach(p=>{p.vy+=.35;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.globalAlpha=Math.max(0,1-el/3200);ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h*Math.abs(Math.cos(p.r)));ctx.restore();});
+    if(el<3300)requestAnimationFrame(fr);else ctx.clearRect(0,0,W,H);
+  })(t0);
+}
+
+/* ============ SETUP ============ */
+function setRangeFill(el){const p=(el.value-el.min)/(el.max-el.min)*100;el.style.setProperty('--p',p+'%');}
+function renderStores(){
+  $('#stores').innerHTML=STORES.map(s=>`<button class="store${s.id===S.store?' sel':''}" style="background:${s.bg};color:${s.fg};${s.id==='norma'?'box-shadow:inset 0 0 0 2px #e30613'+(s.id===S.store?',0 0 0 3px var(--bg),0 0 0 5.5px var(--orange)':''):''}" data-act="store" data-arg="${s.id}">${s.n}<span class="ck">✓</span></button>`).join('');
+}
+function renderBudget(){
+  const max=S.persons>2?S.persons*30:60,el=$('#budget');
+  el.max=max;if(S.budget>max)S.budget=max;el.value=S.budget;setRangeFill(el);
+  $('#budVal').textContent=S.budget;$('#budMax').textContent=max+' €';
+  $('#perMeal').textContent=`≈ ${eur(S.budget/5)} pro Essen`+(S.persons>1?` · ${eur(S.budget/5/S.persons)} pro Portion`:'');
+}
+function renderLazy(bounce){
+  const L=LAZY[S.lazy];
+  $('#lazy').innerHTML=`<div class="lazybig${bounce?' bounce':''}">${L.e}</div><div class="lazyt">„${L.t}“</div>
+   <div class="rules">${L.rules.map(r=>`<span class="rule">${r}</span>`).join('')}</div>
+   <div class="lazyrow">${LAZY.map((l,i)=>`<button class="lz${i===S.lazy?' sel':''}" data-act="lazy" data-arg="${i}" aria-label="${l.t}">${l.e}</button>`).join('')}</div>`;
+}
+function renderPersons(){const el=$('#persons');el.value=S.persons;setRangeFill(el);$('#perVal').textContent=(S.persons>1?'👥 ':'👤 ')+pers(S.persons);}
+function renderDiet(){$('#diet').innerHTML=DIETS.map((d,i)=>`<button class="${i===S.diet?'on':''}" data-act="diet" data-arg="${i}">${d.e} ${d.n}</button>`).join('');}
+function renderPantry(){
+  $('#pChips').innerHTML=S.pantry.map((p,i)=>`<span class="pc${known(p)?'':' unk'}">${esc(p)}<button class="x" data-act="pDel" data-arg="${i}" aria-label="Entfernen">✕</button></span>`).join('');
+  const low=S.pantry.map(p=>p.toLowerCase());
+  $('#pQuick').innerHTML=QUICK.filter(q=>!low.includes(q.toLowerCase())).slice(0,8).map(q=>`<button class="qc" data-act="pQuick" data-arg="${q}">+ ${q}</button>`).join('');
+  const unk=S.pantry.filter(p=>!known(p));
+  let h=unk.length?`<div class="unknote">„${esc(unk.join('“, „'))}“ kennen wir (noch) nicht. Steht drin, zählt aber nicht.</div>`:'';
+  if(S.pantry.length){
+    const sug=avail().map(d=>({d,h:hits(d)})).filter(x=>x.h.length)
+      .sort((a,b)=>b.h.length-a.h.length||(a.d.lvl>S.lazy)-(b.d.lvl>S.lazy)||a.d.lvl-b.d.lvl).slice(0,5);
+    if(sug.length){
+      h+=`<div class="card sugg"><div class="sugg-h">Damit kannst du kochen</div>`+sug.map(({d,h})=>{
+        const on=S.pinned.includes(d.id);
+        return `<div class="srow"><div class="sthumb" style="background:${grad(d)}">${d.e}</div>
+          <div class="sinfo"><b>${d.n}</b><span>🧺 ${h.map(id=>C[id].n.replace(/ \(.*\)|,.*/,'')).join(', ')}</span>${d.lvl>S.lazy?`<em> · Stufe ${LAZY[d.lvl].e}</em>`:''}</div>
+          <button class="pinb${on?' on':''}" data-act="pin" data-arg="${d.id}">${on?'✓ Fest':'📌 Rein'}</button></div>`;}).join('')+`</div>`;
+    } else h+=`<div class="unknote">Dazu fällt uns gerade kein Gericht ein. Wir planen trotzdem was Leckeres.</div>`;
+  }
+  $('#sugg').innerHTML=h;
+}
+function renderSetup(){renderStores();renderBudget();renderLazy();renderPersons();renderDiet();renderPantry();}
+function addPantry(raw){
+  const parts=String(raw||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+  let added=0;
+  parts.forEach(p=>{const v=p.charAt(0).toUpperCase()+p.slice(1);if(!S.pantry.some(x=>x.toLowerCase()===v.toLowerCase())){S.pantry.push(v);added++;}});
+  if(added){sfx.pop();save();renderPantry();}
+}
+
+/* ============ LADEN ============ */
+function runLoading(){
+  makePlan();
+  const st=store(),L=LAZY[S.lazy];
+  const lines=[`Gerichte, die es bei ${st.n} gibt`,`Unter ${S.budget} € für die ganze Woche`,`Max. ${L.max} Minuten, wenig Abwasch`];
+  if(S.diet)lines.push(S.diet===2?'100 % vegan, versprochen':'Ohne Fleisch, mit Geschmack');
+  if(S.pantry.some(known))lines.push('Mit dem, was du noch da hast');
+  lines.push('Einkaufsliste nach Gängen sortiert');
+  const em=['🍅','🥦','🧀','🍝','🥚','🌶️','🥕','🍋'];
+  $('#ring').innerHTML=em.map((e,i)=>{const a=i*360/em.length;return `<i style="transform:rotate(${a}deg) translateX(104px)"><b style="transform:translate(-50%,-50%) rotate(${-a}deg)"><em>${e}</em></b></i>`;}).join('');
+  $('#lchecks').innerHTML=lines.map(l=>`<li><span class="c">✓</span>${esc(l)}</li>`).join('');
+  go('loading','fade');
+  const step=Math.round(2100/lines.length);
+  lines.forEach((_,i)=>setTimeout(()=>{$('#lchecks').children[i].classList.add('done');sfx.tick();},350+i*step));
+  setTimeout(()=>{renderWeek(true);go('week','fade');sfx.bell();},350+lines.length*step+300);
+}
+
+/* ============ WOCHE ============ */
+function animateNum(el,to){
+  const from=parseFloat(el.dataset.v||0),t0=performance.now();el.dataset.v=to;
+  (function f(t){const k=Math.min(1,(t-t0)/500),e=1-Math.pow(1-k,3);el.textContent=eur(from+(to-from)*e);if(k<1)requestAnimationFrame(f);})(t0);
+}
+function cardHTML(d,i,anim){
+  const h=hits(d).map(id=>C[id].n.replace(/ \(.*\)|,.*/,''));
+  return `<article class="dish card${anim?' flip-in':''}" id="dish${i}" data-act="open" data-arg="${i}" style="${anim?`animation-delay:${i*70}ms`:''}">
+    <div class="thumb" style="background:${grad(d)}">${d.e}</div>
+    <div class="dinfo"><div class="day">${DAYS[i]}</div><h3>${d.n}</h3>
+      <div class="chips"><span class="chip">⏱ ${d.t} Min</span><span class="chip">${devIcon(d.dev)} ${d.dev}</span><span class="chip money">${eur(share(d))}</span></div>
+      ${h.length?`<div class="ptag">🧺 nutzt deine ${h.join(', ')}</div>`:''}</div>
+    <button class="swap" data-act="swap" data-arg="${i}" aria-label="Gericht tauschen"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 20v-4h-4"/></svg></button>
+  </article>`;
+}
+function renderSummary(){
+  const ds=S.plan.map(R),L=buildList(ds),left=r2(S.budget-L.total),over=left<0;
+  $('#wkSub').textContent=`KW ${isoWeek(new Date())} · ${store().n} · ${pers(S.persons)}`;
+  animateNum($('#sumVal'),L.total);
+  $('#sumOf').textContent=`/ ${S.budget} €`;
+  $('#sumBar').style.width=Math.min(100,L.total/S.budget*100)+'%';
+  $('#sumBarWrap').classList.toggle('over',over);
+  const sl=$('#sumLeft');sl.classList.toggle('over',over);
+  sl.textContent=over?`${eur(-left)} drüber. Budget hoch oder ↻ drücken.`:`${eur(left)} übrig für Snacks 🍫`;
+  $('#stTime').textContent=Math.round(ds.reduce((s,d)=>s+d.t,0)/ds.length)+' Min';
+  $('#stIng').textContent=L.items.length;
+  $('#stMeal').textContent=eur(L.total/5);
+  document.querySelectorAll('.persLbl').forEach(e=>e.textContent=pers(S.persons));
+  updateBadge();
+}
+function renderWeek(anim){
+  $('#dishes').innerHTML=S.plan.map((id,i)=>cardHTML(R(id),i,anim)).join('');
+  renderSummary();
+}
+function updateBadge(){const L=planList();const n=L.items.filter(m=>!S.checked[m.id]).length;const b=$('#badge');b.textContent=n;b.dataset.n=n;}
+function swapDish(i){
+  i=+i;const all=avail();
+  let c=all.filter(d=>!S.plan.includes(d.id)&&d.lvl<=S.lazy),up=false;
+  if(!c.length){c=all.filter(d=>!S.plan.includes(d.id));up=true;}
+  if(!c.length){toast('Mehr Gerichte haben wir gerade nicht. Ehrlich.');return;}
+  const pick=c.map(d=>({d,s:(d.lvl===S.lazy?2:0)-(d.lvl-S.lazy)*2*(d.lvl>S.lazy)+hits(d).length*2+Math.random()*3})).sort((a,b)=>b.s-a.s)[0].d;
+  const old=S.plan[i];S.pinned=S.pinned.filter(p=>p!==old);
+  S.plan[i]=pick.id;save();sfx.swoosh();
+  const card=$('#dish'+i);card.querySelector('.swap').classList.add('spin');card.classList.add('flip-out');
+  setTimeout(()=>{card.outerHTML=cardHTML(pick,i,true);renderSummary();},280);
+  if(up)toast('In deiner Faulheitsstufe ist nix mehr frei. Hier eins mit etwas mehr Aufwand.');
+}
+
+/* ============ REZEPT ============ */
+let curRec=0;
+function renderRecipe(){
+  const d=R(S.plan[curRec]);
+  const diet=d.rank===2?'🌱 Vegan':d.rank===1?'🥚 Veggie':d.diet==='fish'?'🐟 Fisch':'🍗 Fleisch';
+  $('#recScroll').innerHTML=`
+   <div class="hero" style="background:${grad(d)}"><span>${d.e}</span></div>
+   <div class="sheet">
+     <div class="eyebrow">${DAYS[curRec]}</div>
+     <h1 class="rtitle">${d.n}</h1>
+     <div class="chips"><span class="chip">⏱ ${d.t} Min</span><span class="chip">${devIcon(d.dev)} ${d.dev}</span><span class="chip money">${eur(share(d))}</span><span class="chip">${diet}</span></div>
+     <div class="tiles">
+       <div class="card tile"><b>${d.kcal}</b><span>kcal</span></div>
+       <div class="card tile"><b>${d.pr} g</b><span>Protein</span></div>
+       <div class="card tile"><b>${d.st.length}</b><span>Schritte</span></div>
+       <div class="card tile"><b>${devCount(d.dev)}</b><span>Geräte</span></div>
+     </div>
+     <div class="card prow">
+       <span class="pe">👥</span>
+       <div class="pl"><b class="persLbl">${pers(S.persons)}</b><span>kcal und Protein pro Portion</span></div>
+       <div class="stepper"><button data-act="pp" data-arg="-1" aria-label="Weniger Personen">−</button><button data-act="pp" data-arg="1" aria-label="Mehr Personen">+</button></div>
+     </div>
+     <h2 class="sect">Du brauchst</h2>
+     <div class="card ings">${d.ing.map(([id,a])=>`<div class="ing"><span>${C[id].n.replace(/ \(Dose\)| \(TK\)/,'')}${pantryHit(id)?'<span class="have">hast du ✓</span>':''}</span><span class="amt">${fmtAmt(a*S.persons,C[id].u)}</span></div>`).join('')}</div>
+     ${d.sp.length?`<p class="staples">Aus dem Vorrat: ${d.sp.join(', ')}</p>`:''}
+     <h2 class="sect">So geht's</h2>
+     <ol class="steps">${d.st.map(([t,tip,tm],i)=>`<li class="card"><span class="n">${i+1}</span><p>${t}${tm?` <span class="chip" style="margin-left:4px">⏲ ${fmtTime(tm)}</span>`:''}<small>${tip}</small></p></li>`).join('')}</ol>
+   </div>`;
+}
+
+/* ============ KOCHMODUS ============ */
+let cook=null,ringInt=null;
+function fmtTime(s){s=Math.ceil(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function stopTimers(){if(cook&&cook.t)clearInterval(cook.t.int);clearInterval(ringInt);ringInt=null;}
+function startCook(){cook={d:R(S.plan[curRec]),i:0,t:null};renderCook();go('cook');}
+function renderCook(){
+  stopTimers();
+  const {d,i}=cook,n=d.st.length;
+  const segs=`<div class="segs">${d.st.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join('')}</div>`;
+  if(i>=n){
+    $('#cookScroll').innerHTML=`<div class="ctop"><button class="cx" data-act="cookClose" aria-label="Schließen">✕</button>${segs}</div>
+     <div class="cdone"><div class="big">🎉</div><h2>Du hast gekocht.<br>Selbst.<br>Mama wäre stolz.</h2><p>${d.n} · ${S.cooked} ${S.cooked===1?'Gericht':'Gerichte'} selbst gekocht</p></div>
+     <div class="cnav"><button class="btn" data-act="cookClose">Zurück zur Woche</button></div>`;
+    confetti();sfx.bell();return;
+  }
+  const [txt,tip,tm]=d.st[i];
+  cook.t=tm?{total:tm,left:tm,run:false,done:false,end:0,int:null}:null;
+  const CIRC=2*Math.PI*84;
+  $('#cookScroll').innerHTML=`<div class="ctop"><button class="cx" data-act="cookClose" aria-label="Schließen">✕</button>${segs}</div>
+   <div class="cbody" key="${i}">
+     <div class="clabel">Schritt ${i+1} von ${n}</div>
+     <div class="cstep">${txt}</div>
+     <div class="ctip">💬 ${tip}</div>
+     ${tm?`<button class="timer" id="timer" data-act="timer" aria-label="Timer"><svg viewBox="0 0 190 190"><circle class="bgc" cx="95" cy="95" r="84"/><circle class="fgc" id="tRing" cx="95" cy="95" r="84" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg><span class="tt" id="tTxt">${fmtTime(tm)}</span><span class="tl" id="tLbl">Antippen zum Starten</span></button>`:''}
+   </div>
+   <div class="cnav">${i>0?`<button class="btn prev" data-act="cookPrev" aria-label="Zurück">‹</button>`:''}<button class="btn" data-act="cookNext">${i===n-1?'Fertig gekocht 🎉':'Weiter →'}</button></div>`;
+}
+function updTimer(){
+  const T=cook&&cook.t;if(!T)return;const el=$('#timer');if(!el)return;
+  const CIRC=2*Math.PI*84;
+  $('#tRing').style.strokeDashoffset=CIRC*(1-T.left/T.total);
+  $('#tTxt').textContent=T.done?'0:00':fmtTime(T.left);
+  $('#tLbl').textContent=T.done?'Fertig! Antippen':T.run?'Läuft · Antippen = Pause':T.left<T.total?'Pausiert · Antippen':'Antippen zum Starten';
+  el.classList.toggle('run',T.run);el.classList.toggle('done',T.done);
+}
+function tapTimer(){
+  const T=cook.t;if(!T)return;ac();
+  if(T.done){clearInterval(ringInt);ringInt=null;T.done=false;T.left=T.total;updTimer();return;}
+  if(T.run){T.left=Math.max(0,(T.end-Date.now())/1000);T.run=false;clearInterval(T.int);}
+  else{T.end=Date.now()+T.left*1000;T.run=true;T.int=setInterval(()=>{
+    T.left=Math.max(0,(T.end-Date.now())/1000);
+    if(T.left<=0){clearInterval(T.int);T.run=false;T.done=true;ring();}
+    updTimer();},200);}
+  sfx.tick();updTimer();
+}
+function ring(){let k=0;const r=()=>{sfx.bell();if(navigator.vibrate)navigator.vibrate([300,120,300]);if(++k>=5){clearInterval(ringInt);ringInt=null;}};r();ringInt=setInterval(r,1600);}
+
+/* ============ EINKAUFSLISTE ============ */
+let allDoneShown=false;
+function renderList(){
+  const L=planList(),done=L.items.filter(m=>S.checked[m.id]).length,tot=L.items.length;
+  const sub=m=>{const k=m.dishes.length;return `${m.packs}× ${C[m.id].pk} · `+(k>1?`<span class="multi">für ${k} Gerichte</span>`:`für ${DSHORT[m.dishes[0]]}`);};
+  let h=`<div class="eyebrow">${store().n} · in Laufreihenfolge</div><h1 class="h1">Einkauf.</h1>
+   <div class="card lprog"><div class="row"><b>${done}/${tot}</b><span>${done===tot&&tot?'Alles im Wagen 🎉':'im Wagen'}</span></div><div class="bar"><i style="width:${tot?done/tot*100:0}%"></i></div></div>
+   <div class="lbtns"><button class="btn dark" data-act="copy" id="copyBtn">📋 Liste kopieren</button>
+   <button class="btn wa" data-act="wa" aria-label="Per WhatsApp teilen"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.4-.3Z"/></svg></button></div>`;
+  AISLES.forEach(([g,name,em])=>{
+    const its=L.items.filter(m=>m.g===g);if(!its.length)return;
+    h+=`<div class="aisle"><div class="aisle-h">${em} ${name}<small>${its.filter(m=>!S.checked[m.id]).length} offen</small></div><div class="card items">`+
+      its.map(m=>`<div class="item${S.checked[m.id]?' done':''}" data-act="check" data-arg="${m.id}"><span class="cb">✓</span><div class="iinfo"><b>${m.n}</b><span>${sub(m)}</span></div><span class="iprice">${eur(m.price)}</span></div>`).join('')+`</div></div>`;
+  });
+  if(L.have.length){
+    h+=`<div class="aisle"><div class="aisle-h">🧺 Hast du schon da<small>0,00 €</small></div><div class="card items">`+
+      L.have.map(m=>`<div class="item have"><span class="cb">✓</span><div class="iinfo"><b>${m.n}</b><span>brauchst ${fmtAmt(m.need,C[m.id].u)} · aus deinem Vorrat</span></div><span class="iprice muted">–</span></div>`).join('')+`</div></div>`;
+  }
+  h+=`<div class="ltotal"><span>Summe (${tot} Artikel)</span><b>${eur(L.total)}</b></div>
+   <p class="lnote">Salz, Pfeffer und Öl hast du hoffentlich.<br>Wenn nicht: Wir müssen reden.</p>`;
+  $('#listScroll').innerHTML=h;
+  updateBadge();
+}
+function toggleCheck(id){
+  S.checked[id]=!S.checked[id];save();sfx.check();
+  const before=$('#listScroll').scrollTop;renderList();$('#listScroll').scrollTop=before;
+  const L=planList(),all=L.items.length&&L.items.every(m=>S.checked[m.id]);
+  if(all&&!allDoneShown){allDoneShown=true;confetti();sfx.bell();toast('Alles im Wagen. Ab nach Hause, das Sofa wartet.');}
+  if(!all)allDoneShown=false;
+}
+function listText(){
+  const L=planList();let items=L.items.filter(m=>!S.checked[m.id]);if(!items.length)items=L.items;
+  let t=`🛒 *Einkaufsliste – Couchkoch.*\n${store().n} · ${pers(S.persons)} · Mo–Fr\n`;
+  AISLES.forEach(([g,name,em])=>{
+    const its=items.filter(m=>m.g===g);if(!its.length)return;
+    t+=`\n${em} *${name}*\n`+its.map(m=>`▫️ ${m.n} – ${m.packs}× ${C[m.id].pk} (${eur(m.price)})`).join('\n')+'\n';
+  });
+  t+=`\n💶 *Summe: ca. ${eur(r2(items.reduce((s,m)=>s+m.price,0)))}*`;
+  if(L.have.length)t+=`\n🧺 Schon da: ${L.have.map(m=>m.n).join(', ')}`;
+  t+=`\n\n🍽️ *Diese Woche:*\n`+S.plan.map((id,i)=>`${DSHORT[i]}: ${R(id).n}`).join('\n');
+  return t;
+}
+async function copyList(){
+  const t=listText();let ok=false;
+  try{await navigator.clipboard.writeText(t);ok=true;}catch(e){
+    const ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,t.length);try{ok=document.execCommand('copy');}catch(_){}ta.remove();
+  }
+  sfx.pop();
+  toast(ok?'Kopiert! Ab damit in den WhatsApp-Chat. 📋':'Kopieren ging nicht. Nimm den grünen Button daneben.');
+  const b=$('#copyBtn');if(b&&ok){b.textContent='✓ Kopiert';setTimeout(()=>{if($('#copyBtn'))$('#copyBtn').textContent='📋 Liste kopieren';},2000);}
+}
+
+/* ============ PROFIL ============ */
+function renderProfile(){
+  const L=LAZY[S.lazy];
+  const line=S.cooked===0?'Noch nix selbst gekocht. Der Kochmodus wartet auf dich.':S.cooked<5?'Läuft. Lieferdienste machen sich langsam Sorgen.':'Du bist offiziell zu fleißig für diese App.';
+  $('#profScroll').innerHTML=`<div class="eyebrow">Profil</div><h1 class="h1">Du, Couchkoch.</h1>
+   <div class="pava">${L.e}</div>
+   <div class="h2">„${L.t}“</div><div class="muted" style="font-size:14px;margin-top:4px">Faulheitsstufe ${S.lazy+1} von 4</div>
+   <div class="card stat"><div class="num">${S.cooked}</div><p><b>selbst gekocht.</b><br>${line}</p></div>
+   <div class="card plist">
+     <div class="prow2"><span>Markt</span><b>${store().n}</b></div>
+     <div class="prow2"><span>Budget</span><b>${S.budget} € / Woche</b></div>
+     <div class="prow2"><span>Personen</span><b>${pers(S.persons)}</b></div>
+     <div class="prow2"><span>Ernährung</span><b>${DIETS[S.diet].e} ${DIETS[S.diet].n}</b></div>
+     <div class="prow2"><span>Vorrat</span><b>${S.pantry.length?esc(S.pantry.join(', ')):'–'}</b></div>
+     <div class="prow2"><span>Sounds</span><button class="tog${S.sound?' on':''}" data-act="sound" aria-label="Sounds an/aus"></button></div>
+   </div>
+   <div style="margin-top:18px"><button class="btn" data-act="settings">Einstellungen ändern</button></div>
+   <p class="foot">Preise sind Schätzungen auf Discounter-Niveau, ohne Gewähr.<br>Couchkoch. braucht kein Konto und speichert nur auf diesem Gerät.</p>`;
+}
+
+/* ============ AKTIONEN ============ */
+const ACT={
+  start(){sfx.pop();renderSetup();go('setup');},
+  resume(){sfx.pop();renderWeek(true);go('week','fade');},
+  go(arg){sfx.tick();stopTimers();if(arg==='week')renderWeek();go(arg,'back');},
+  store(id){S.store=id;save();sfx.tick();renderStores();},
+  lazy(i){S.lazy=+i;save();sfx.pop();renderLazy(true);renderPantry();},
+  diet(i){S.diet=+i;save();sfx.tick();renderDiet();renderPantry();},
+  pAdd(){const inp=$('#pIn');addPantry(inp.value);inp.value='';inp.focus();},
+  pQuick(v){addPantry(v);},
+  pDel(i){const p=S.pantry.splice(+i,1)[0];sfx.tick();save();renderPantry();},
+  pin(id){
+    if(S.pinned.includes(id))S.pinned=S.pinned.filter(p=>p!==id);
+    else{if(S.pinned.length>=5){toast('Maximal 5 fest. Ist ja nur Mo–Fr.');return;}S.pinned.push(id);}
+    sfx.pop();save();renderPantry();
+  },
+  plan(){ac();sfx.pop();runLoading();},
+  reroll(){makePlan();sfx.swoosh();renderWeek(true);toast('Neu gewürfelt 🎲');},
+  swap(i,el,e){e.stopPropagation();swapDish(i);},
+  open(i){curRec=+i;sfx.tick();renderRecipe();go('recipe');},
+  pp(d){
+    const n=Math.min(6,Math.max(1,S.persons+(+d)));if(n===S.persons)return;
+    S.persons=n;save();sfx.tick();
+    if(cur==='recipe')renderRecipe();
+    renderWeek();
+  },
+  cook(){sfx.pop();startCook();},
+  cookNext(){
+    sfx.tick();cook.i++;
+    if(cook.i>=cook.d.st.length){S.cooked++;save();}
+    renderCook();
+  },
+  cookPrev(){sfx.tick();cook.i=Math.max(0,cook.i-1);renderCook();},
+  cookClose(){stopTimers();sfx.tick();renderWeek();go('week','back');},
+  timer(){tapTimer();},
+  tab(t){sfx.tick();if(t==='week')renderWeek();if(t==='list')renderList();if(t==='profile')renderProfile();go(t);},
+  check(id){toggleCheck(id);},
+  copy(){copyList();},
+  wa(){sfx.pop();window.open('https://wa.me/?text='+encodeURIComponent(listText()),'_blank');},
+  sound(){S.sound=!S.sound;save();renderProfile();sfx.pop();},
+  settings(){sfx.pop();renderSetup();go('setup');}
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const f=ACT[el.dataset.act];if(f)f(el.dataset.arg,el,e);
+});
+
+/* Eingaben */
+$('#budget').addEventListener('input',e=>{S.budget=+e.target.value;renderBudget();save();if(S.budget%5===0)sfx.tick();});
+$('#persons').addEventListener('input',e=>{const v=+e.target.value;if(v!==S.persons){S.persons=v;sfx.tick();}renderPersons();renderBudget();save();});
+$('#pIn').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();ACT.pAdd();}});
+
+/* Uhr */
+function clock(){const d=new Date();$('#clock').textContent=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0');}
+clock();setInterval(clock,15000);
+
+/* Start */
+load();
+if(!STORES.some(s=>s.id===S.store))S.store='lidl';
+S.plan=(S.plan||[]).filter(id=>byId[id]);
+if(S.plan.length===5)$('#resumeBtn').hidden=false;
+renderSetup();
+</script>
+</body>
+</html>
